@@ -5,8 +5,8 @@ var fresnelMatPow=document.getElementsByClassName('fresnelPow')[0];
 var fresnelMatPower=document.getElementsByClassName('fresnelPower')[0];
 var monkeyHead;
 let initMatValue={
-    mainMatColor:hexToRgb(mainMatColor.value),
-    fresnelColor:hexToRgb(fresnelMatColor.value),
+    mainMatColor:hexToHSL(mainMatColor.value),
+    fresnelColor:hexToHSL(fresnelMatColor.value),
     fresnelPower:fresnelMatPower.value,
     fresnelPow  :fresnelMatPow.value
 };
@@ -15,8 +15,8 @@ var selfMat=new THREE.ShaderMaterial({
    uniforms:{
     fresnelPow:{value:initMatValue.fresnelPow},
     fresnelPower:{value:initMatValue.fresnelPower},
-    fresnelColor:{value:new THREE.Vector3(initMatValue.fresnelColor[0]/255,initMatValue.fresnelColor[1]/255,initMatValue.fresnelColor[2]/255)},
-    mainColor:{value:new THREE.Vector3(initMatValue.mainMatColor[0]/255,initMatValue.mainMatColor[1]/255,initMatValue.mainMatColor[2]/255)},
+    fresnelColor:{value:new THREE.Vector3(initMatValue.fresnelColor[0],initMatValue.fresnelColor[1],initMatValue.fresnelColor[2])},
+    mainColor:{value:new THREE.Vector3(initMatValue.mainMatColor[0],initMatValue.mainMatColor[1],initMatValue.mainMatColor[2])},
     lightPosition:{value:new THREE.Vector3(0,50,50)}, 
    },
    //236,65,65
@@ -92,7 +92,7 @@ function initLight() {
 
 function initModel() {
     var loader = new THREE.STLLoader();
-    loader.load("Model/human.stl", function (geometry) {
+    loader.load("Model/MonkeyHead.stl", function (geometry) {
         //创建纹理
         var mat = selfMat;
         monkeyHead = new THREE.Mesh(geometry, mat);
@@ -154,15 +154,15 @@ function draw() {
 }
 function matColorChange(event) 
 {
-    let changeColor= hexToRgb(event.target.value);
+    let changeColor= hexToHSL(event.target.value);
     //event.target返回绑定事件的整个节点信息
     switch(event.target)
     {
       case mainMatColor:{
-        monkeyHead.material.uniforms.mainColor.value =new THREE.Vector3(changeColor[0]/255,changeColor[1]/255,changeColor[2]/255);
+        monkeyHead.material.uniforms.mainColor.value =new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
       };break;
       case fresnelMatColor:{
-        monkeyHead.material.uniforms.fresnelColor.value =new THREE.Vector3(changeColor[0]/255,changeColor[1]/255,changeColor[2]/255);
+        monkeyHead.material.uniforms.fresnelColor.value =new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
       };break;
     }
    
@@ -179,7 +179,7 @@ function matValueChange(event)
       };break;
     }
 }
-function hexToRgb(hexColor)
+function hexToHSL(hexColor)
 {
     let resultRgb=new Array(3).fill('');
     if(!(/#/).test(hexColor))
@@ -195,7 +195,7 @@ function hexToRgb(hexColor)
         hexindex+=hexColors[index];
         if(index%2==0)
         {
-            resultRgb[rgbIndex]=parseInt('0x'.concat(hexindex));
+            resultRgb[rgbIndex]=parseInt('0x'.concat(hexindex))/255.0;
             hexindex='';
             rgbIndex++;
             

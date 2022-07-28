@@ -92,7 +92,7 @@ function initLight() {
 
 function initModel() {
     var loader = new THREE.STLLoader();
-    loader.load("Model/MonkeyHead.stl", function (geometry) {
+    loader.load("Model/human.stl", function (geometry) {
         //创建纹理
         var mat = selfMat;
         monkeyHead = new THREE.Mesh(geometry, mat);

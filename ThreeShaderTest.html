@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreeJS Shader效果测试</title>
+    <link rel="stylesheet" href="CSS/ThreeJsShader.css" type="text/css">
+    
+</head>
+<body onload="draw();">
+    <script src="ThreeJSLib/three.js"></script>
+    <script src="ThreeJSLib/STLLoader.js"></script>
+    <script src="ThreeJSLib/OrbitControls.js"></script>
+    <script src="ThreeJSLib/SceneUtils.js"></script>
+     <nav>
+        <div class="property proIndex1">
+            <label for="mainMatColor" >主材质颜色</label>
+            <input type="color" name="" id="mainMatColor" class="propColor matColor" value="#EC4141">         
+        </div>
+        <div class="property proIndex2">
+            <label for="mainfresnelColor">菲涅尔颜色</label>
+            <input type="color" name="" id="mainfresnelColor" class="propColor fresnelColor" value="#1AB8E0">    
+        </div>
+        <div class="property proIndex3">
+            <label for="mainfresnelPow">菲涅尔次幂</label>
+            <input type="range" name="" id="mainfresnelPow" class="propColor fresnelPow" oninput="matValueChange(event)" value="12" max="100">    
+        </div>
+        <div class="property proIndex4">
+            <label for="mainfresnelPower">菲涅尔强度</label>
+            <input type="range" name="" id="mainfresnelPower" class="propColor fresnelPower" oninput="matValueChange(event)" value="10" max="255">    
+        </div>
+    </nav>
+    <main class="mainShow">
+        <script src="JS/ThreeTestShader.js"></script>     
+    </main>
+
+  
+</body>
+</html>

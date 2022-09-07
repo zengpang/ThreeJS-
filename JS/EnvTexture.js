@@ -75,6 +75,7 @@ function initScene() {
 
 var light;
 function initLight() {
+   
     scene.add(new THREE.AmbientLight(0x444444));
     light = new THREE.PointLight(0xffffff);
     light.position.set(0, 50, 50);

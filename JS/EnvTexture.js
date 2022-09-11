@@ -1,12 +1,14 @@
+
 var renderer;
-var mainMatColor=document.getElementsByClassName('matColor')[0];
-var fresnelMatColor=document.getElementsByClassName('fresnelColor')[0];
-var fresnelMatPow=document.getElementsByClassName('fresnelPow')[0];
-var fresnelMatPower=document.getElementsByClassName('fresnelPower')[0];
+const $=s=>document.querySelector(s);
+var mainMatColor=$('#mainColor');
+var fresnelMatColor=$('#envValue');
+var fresnelMatPow=$('#rContrastValue');
+var fresnelMatPower=$('#rInitValue');
 var monkeyHead;
 let initMatValue={
     mainMatColor:hexToHSL(mainMatColor.value),
-    fresnelColor:hexToHSL(fresnelMatColor.value),
+    fresnelColor:hexToHSL(mainMatColor.value),
     fresnelPower:fresnelMatPower.value,
     fresnelPow  :fresnelMatPow.value
 };
@@ -46,6 +48,7 @@ function matinit()
         vertexShader:this.fragShaderStr,
         fragmentShader:this.vertexShaderStr
      });
+     console.log(`材质初始化`);
 }
 mainMatColor.addEventListener("input",matColorChange,false);
 fresnelMatColor.addEventListener("input",matColorChange,false);
@@ -64,7 +67,7 @@ function initEnv()
 var camera;
 function initCamera() {
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2, 4);
+    camera.position.set(0, 200, 4);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
 
@@ -84,6 +87,21 @@ function initLight() {
     scene.add(light);
 }
 //模型初始化
+function initModelFbx() {
+    console.log(`执行`);
+    var loader = new THREE.FBXLoader();
+    loader.load("../Model/SM_Shield.fbx", function (object) {
+        //创建纹理
+        var mat = selfMat;
+        let geometry=object.children[0].geometry;
+        monkeyHead = new THREE.Mesh(geometry, mat);;
+   
+         monkeyHead.rotation.x = -1 * Math.PI; //将模型摆正
+         monkeyHead.scale.set(0.2, 0.2, 0.2); //缩放
+        // geometry.center(); //居中显示
+        scene.add(monkeyHead);
+    });
+}
 function initModel() {
     var loader = new THREE.STLLoader();
     loader.load("../Model/MonkeyHead.stl", function (geometry) {
@@ -96,7 +114,6 @@ function initModel() {
         scene.add(monkeyHead);
     });
 }
-
 //用户交互插件 鼠标左键按住旋转，右键按住平移，滚轮缩放
 var controls;
 function initControls() {
@@ -113,7 +130,7 @@ function initControls() {
     //设置相机距离原点的最远距离
     controls.minDistance = 1;
     //设置相机距离原点的最远距离
-    controls.maxDistance = 200;
+    controls.maxDistance = 500;
     //是否开启右键拖拽
     controls.enablePan = true;
 }
@@ -198,7 +215,7 @@ function draw() {
     initScene();
     initCamera();
     initLight();
-    initModel();
+    initModelFbx();
     initControls();
     animate();
     window.onresize = onWindowResize;

@@ -6,14 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>环境光贴图ThreeJS实验</title>
     <link rel="stylesheet" href="CSS/ShaderPage.css">
-    <script src="ThreeJSLib/three.js"></script>
-    <script src="ThreeJSLib/STLLoader.js"></script>
-    <script src="ThreeJSLib/OrbitControls.js"></script>
-    <script src="ThreeJSLib/SceneUtils.js"></script>
+    
+    <script src="../ThreeJSLib/threeNew.js"></script>
+    <script src="../ThreeJSLib/STLLoaderNew.js"></script>
+    <script src="../ThreeJSLib/OrbitControlsNew.js"></script>
+    <script src="../ThreeJSLib/SceneUtils.js"></script>
+    <script src="../ThreeJSLib/stats.min.js"></script>
+   
+    <script src="../ThreeJSLib/fflate.min.js"></script>
+    <script  src="../ThreeJsLib/FBXLoaderNew.js"></script>
+    
 </head>
-<body onload="">
+<body onload="draw()">
     <main class="mainShow"> 
-            
+         
     </main>
     <footer>
         <div class="matValueTools">
@@ -24,7 +30,7 @@
                 </div>
                 <div class="property proIndex2">
                     <label for="envValue">环境光强度</label>
-                    <input type="range" name="" id="mainNormal" class="matProp envValue" min="0" value="1" max="7">    
+                    <input type="range" name="" id="envValue" class="matProp envValue" min="0" value="1" max="7">    
                 </div>
                 <div class="property proIndex3">
                     <label for="aoValue">AO强度</label>
@@ -48,6 +54,7 @@
                 </div> 
         </div>
     </footer>
+    <script  src="JS/EnvTexture.js"></script>
 </body>
 
 </html>

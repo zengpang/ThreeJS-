@@ -1,9 +1,9 @@
-const $=s=>document.querySelector(s);
+const $ = s => document.querySelector(s);
 var renderer;
-var mainMatColor=document.getElementsByClassName('matColor')[0];
+var mainMatColor = document.getElementsByClassName('matColor')[0];
 console.log(mainMatColor);
-var title=$(`header h1`);
-var drawContent=$(`.mainShow`);
+var title = $(`header h1`);
+var drawContent = $(`.mainShow`);
 // let initMatValue={
 //     mainMatColor:hexToHSL(mainMatColor.value),
 //     fresnelColor:hexToHSL(fresnelMatColor.value),
@@ -23,10 +23,9 @@ function load(name) {
 //Shader文件读取
 var fragShaderStr;
 var vertexShaderStr;
-function initShader()
-{
-     fragShaderStr=load(`/Shader/MapShader.frag`);
-     vertexShaderStr=load(`/Shader/MapShader.vert`)
+function initShader() {
+    fragShaderStr = load(`/Shader/MapShader.frag`);
+    vertexShaderStr = load(`/Shader/MapShader.vert`)
 }
 //猴头材质
 // var selfMat;
@@ -55,14 +54,13 @@ function initRender() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     //告诉渲染器需要阴影效果 
-	renderer.setClearColor('#1F2025',1.0);
+    renderer.setClearColor('#1F2025', 1.0);
     document.getElementsByClassName('mainShow')[0].appendChild(renderer.domElement);
 }
 //环境光初始化
 var EnvLight;
-function initEnv()
-{
-    
+function initEnv() {
+
 }
 var camera;
 function initCamera() {
@@ -78,11 +76,11 @@ function initScene() {
 
 var light;
 function initLight() {
-       // 半球光
-       let hemiLight = new THREE.HemisphereLight('#80edff','#75baff', 0.3)
-       // 这个也是默认位置
-       hemiLight.position.set(0, 50, 50)
-       scene.add(hemiLight)
+    // 半球光
+    let hemiLight = new THREE.HemisphereLight('#80edff', '#75baff', 0.3)
+    // 这个也是默认位置
+    hemiLight.position.set(0, 50, 50)
+    scene.add(hemiLight)
     scene.add(new THREE.AmbientLight(0x444444));
     light = new THREE.PointLight(0xffffff);
     light.position.set(0, 50, 50);
@@ -92,99 +90,113 @@ function initLight() {
 }
 //地图初始化
 //投影公式
-var projection=d3.geoMercator().center([116.412318,39.909843]).translate([10,-20]);
-var chinaMap=new THREE.Object3D();
-var provinces=new Array();
-var provinceIndex=0;
-function initMap()
-{
-   const loader=new THREE.FileLoader();
-   loader.load(`./Model/JSON/china.json`,(data)=>{
-      const MapStr=JSON.parse(data);
-      const MapDate=MapStr.features;
-      drawMap(MapDate);
-   });
+var projection = d3.geoMercator().center([116.412318, 39.909843]).translate([10, -20]);
+var chinaMap = new THREE.Object3D();
+var provinces = new Array();
+var provinceIndex = 0;
+function initMap() {
+    const loader = new THREE.FileLoader();
+    loader.load(`./Model/JSON/china.json`, (data) => {
+        const MapStr = JSON.parse(data);
+        const MapDate = MapStr.features;
+        drawMap(MapDate);
+    });
 }
 //几何体绘制
-function drawMesh(polygon,color)
-{
-   const shape=new THREE.Shape();
-   polygon.forEach((row,i)=>{
-      const [x,y]=projection(row);
-      if(i===0)
-      {
-        shape.moveTo(x,-y);
-      }
-      shape.lineTo(x,-y);
-   });
-   const geometry=new THREE.ExtrudeGeometry(shape,{
-    depth:10,
-    bevelEnabled: false
-   });
-   const material=new THREE.MeshBasicMaterial({
-    color:color,
-    transparent:true,
-    opacity: 0.3
-   })
-//  const material=selfMat;
-   const resultMesh=new THREE.Mesh(geometry,material);
-   resultMesh.scale.set(1,1,0.1);
-   return resultMesh;
+function drawMesh(polygon, color) {
+    const shape = new THREE.Shape();
+    polygon.forEach((row, i) => {
+        const [x, y] = projection(row);
+        if (i === 0) {
+            shape.moveTo(x, -y);
+        }
+        shape.lineTo(x, -y);
+    });
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 10,
+        bevelEnabled: false
+    });
+    const material = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: 0.3
+    })
+    //  const material=selfMat;
+    const resultMesh = new THREE.Mesh(geometry, material);
+    resultMesh.scale.set(1, 1, 0.1);
+    return resultMesh;
 }
 //边框绘制
-function lineDraw(polygon,color)
-{
-  const lineGeometry=new THREE.BufferGeometry();
-  const pointsArray=new Array();
-  polygon.forEach((row)=>{
-    const [x,y]=projection(row);
-    //创建三维点
-    pointsArray.push(new THREE.Vector3(x,-y,10));
-  })
-  lineGeometry.setFromPoints(pointsArray);
-  //线性材质
-  const lineMaterial=new THREE.LineBasicMaterial({
-    color:color
-  });
-  return new THREE.Line(lineGeometry,lineMaterial);
+function lineDraw(polygon, color) {
+    const lineGeometry = new THREE.BufferGeometry();
+    const pointsArray = new Array();
+    polygon.forEach((row) => {
+        const [x, y] = projection(row);
+        //创建三维点
+        pointsArray.push(new THREE.Vector3(x, -y, 10));
+    })
+    lineGeometry.setFromPoints(pointsArray);
+    //线性材质
+    const lineMaterial = new THREE.LineBasicMaterial({
+        color: color
+    });
+    return new THREE.Line(lineGeometry, lineMaterial);
 }
 //地图绘制
-function drawMap(MapDate)
-{
-    const mapBaseColor=`#3597D4`;
-    MapDate.forEach((feature)=>{
-      const province=new THREE.Object3D();
-      province.properties=feature.properties.name;
-      province.name=`chinaMap${provinceIndex}`;
-      const coordinates=feature.geometry.coordinates;
-      if(feature.geometry.type===`MultiPolygon`)
-      {
-        
-        coordinates.forEach((coordinate)=>{
-            coordinate.forEach((rows)=>{
-                const mesh=drawMesh(rows,mapBaseColor);
-                const line=lineDraw(rows,mapBaseColor);
+function drawMap(MapDate) {
+    //设置地图基础颜色
+    const mapBaseColor = `#3597D4`;
+    //遍历地图数组
+    MapDate.forEach((feature) => {
+        //省份
+        const province = new THREE.Object3D();
+        province.properties = feature.properties.name;
+        province.name = `chinaMap${provinceIndex}`;
+        const coordinates = feature.geometry.coordinates;
+        if (feature.geometry.type === `MultiPolygon`) {
+
+            coordinates.forEach((coordinate) => {
+                coordinate.forEach((rows) => {
+                    const mesh = drawMesh(rows, mapBaseColor);
+                    const line = lineDraw(rows, mapBaseColor);
+                    province.add(line);
+                    province.add(mesh);
+                })
+            })
+        }
+        if (feature.geometry.type === `Polygon`) {
+            coordinates.forEach((coordinate) => {
+                const mesh = drawMesh(coordinate, mapBaseColor);
+                const line = lineDraw(coordinate, mapBaseColor);
                 province.add(line);
                 province.add(mesh);
             })
-        })
-      }
-      if(feature.geometry.type===`Polygon`)
-      {
-        coordinates.forEach((coordinate)=>{
-            const mesh=drawMesh(coordinate,mapBaseColor);
-            const line=lineDraw(coordinate,mapBaseColor);
-            province.add(line);
-            province.add(mesh);
-        })
-      }
-      provinces.push(province);
-      chinaMap.add(province);
-      provinceIndex++;
+        }
+        provinces.push(province);
+        chinaMap.add(province);
+        provinceIndex++;
     })
     scene.add(chinaMap);
 }
 
+//获取疫情数据
+function getepidemicInfo(provinceName) {
+    return new Promise((resolve,reject)=>{
+        let xhr = new XMLHttpRequest();
+        let selectprovince = provinceName.replace(/省|自治区|维吾尔/g,``);
+        console.log(selectprovince);
+        let url = encodeURI(`http://localhost:8888/getCovidInfo?province=${selectprovince}`);
+        xhr.open(`GET`, url, true);
+        xhr.onload = function () {
+            resolve(JSON.parse(xhr.responseText));
+        };
+        xhr.onerror=function(){
+           reject(`出现异常`);
+        };
+        xhr.send();
+    });
+  
+}
 //用户交互插件 鼠标左键按住旋转，右键按住平移，滚轮缩放
 var controls;
 function initControls() {
@@ -205,22 +217,21 @@ function initControls() {
     //是否开启右键拖拽
     controls.enablePan = true;
     //限制相机水平角度最小值
-    controls.minAzimuthAngle=-Math.PI * (50/180);
+    controls.minAzimuthAngle = -Math.PI * (50 / 180);
     //限制相机水平角度最大值
-    controls.maxAzimuthAngle = Math.PI * (50/180);
+    controls.maxAzimuthAngle = Math.PI * (50 / 180);
     //限制相机垂直角度最小值
-    controls.minPolarAngle = -Math.PI * (100/180);
+    controls.minPolarAngle = -Math.PI * (100 / 180);
     //限制相机垂直角度最大值
-    controls.maxPolarAngle =Math.PI * 1;
-   
+    controls.maxPolarAngle = Math.PI * 1;
+
 }
 
 //每帧渲染
 function render() {
-    if(raycaster)
-    {
-        
-        raycaster.setFromCamera(mouse,camera);
+    if (raycaster) {
+
+        raycaster.setFromCamera(mouse, camera);
     }
     renderer.render(scene, camera);
 }
@@ -238,56 +249,59 @@ function animate() {
     render();
     requestAnimationFrame(animate);
 }
-var raycaster=new THREE.Raycaster();
+var raycaster = new THREE.Raycaster();
 var selectedObject;
-var mouse=new THREE.Vector2();
+var mouse = new THREE.Vector2();
 //鼠标移动获取射线终点事件
-function onMouseMove(event)
-{
-    let{top,left,width,height}=drawContent.getBoundingClientRect();
-    let clientX=event.clientX-left;
-    let clientY=event.clientY-top;
-    mouse.x=(clientX/width)*2-1;
-    mouse.y=-(clientY/height)*2+1;
-  
+function onMouseMove(event) {
+    let { top, left, width, height } = drawContent.getBoundingClientRect();
+    let clientX = event.clientX - left;
+    let clientY = event.clientY - top;
+    mouse.x = (clientX / width) * 2 - 1;
+    mouse.y = -(clientY / height) * 2 + 1;
+
 }
 //射线检测事件
-function rayCastEvent()
-{
-   if(selectedObject)
-   {
-    selectedObject.material.opacity=0.3;
-    selectedObject=null;
-   }
-   if(raycaster)
-   {
-    
-    const intersects=raycaster.intersectObjects(provinces,true);
-    if(intersects.length>0)
-    {
-      
-        const res=intersects.filter(function(res){
-            return res && res.object;
-        })[intersects.length-1];
+function rayCastEvent() {
+    if (selectedObject) {
+        selectedObject.material.opacity = 0.3;
+        selectedObject = null;
+    }
+    if (raycaster) {
 
-        if(res && res.object)
-        {
-            selectedObject=res.object;
-            
-          
-            
-            selectedObject.material.opacity=1;
+        const intersects = raycaster.intersectObjects(provinces, true);
+        if (intersects.length > 0) {
+
+            const res = intersects.filter(function (res) {
+                return res && res.object;
+            })[intersects.length - 1];
+
+            if (res && res.object) {
+                selectedObject = res.object;
+                selectedObject.material.opacity = 1;
+            }
         }
     }
-   }
 }
-function mapClick()
-{
-    if(selectedObject)
-    {
+// total:
+// confirm: 1347
+// dead: 2
+// heal: 1341
+// input: 0
+// severe: 0
+// suspect: 0
+//点击事件
+function mapClick() {
+    if (selectedObject) {
         console.log(selectedObject.parent.properties);
-        title.innerText=selectedObject.parent.properties;
-        
+        let selectprovinceName=selectedObject.parent.properties;
+        title.innerText = selectprovinceName;
+        getepidemicInfo(selectprovinceName).then(covidInfo=>{
+            
+            title.innerText = `${selectprovinceName}。共计确诊数量：${covidInfo.total.confirm}。共计死亡数量：${covidInfo.total.dead}。共计治愈数量：${covidInfo.total.heal}`;
+        });
+           
+       
     }
 }
 // //材质颜色变化
@@ -298,14 +312,14 @@ function mapClick()
 //     switch(event.target)
 //     {
 //       case mainMatColor:{
-        
+
 //         selfMat.uniforms.mainColor.value=new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
 //       };break;
 //       case fresnelMatColor:{
 //         selfMat.uniforms.fresnelColor.value =new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
 //       };break;
 //     }
-   
+
 // }
 // //材质变量
 // function matValueChange(event)
@@ -321,24 +335,20 @@ function mapClick()
 //     }
 // }
 //颜色格式转换
-function hexToHSL(hexColor)
-{
-    let resultRgb=new Array(3).fill('');
-    if(!(/#/).test(hexColor))
-    {
-      console.log(`不符合格式，已停止转换`);
-      return;
+function hexToHSL(hexColor) {
+    let resultRgb = new Array(3).fill('');
+    if (!(/#/).test(hexColor)) {
+        console.log(`不符合格式，已停止转换`);
+        return;
     }
     let hexColors = hexColor.split(/#|/);
-    let hexindex='';
-    let rgbIndex=0;
-    for(let index=1;index<hexColors.length;index++)
-    {
-        hexindex+=hexColors[index];
-        if(index%2==0)
-        {
-            resultRgb[rgbIndex]=parseInt('0x'.concat(hexindex))/255.0;
-            hexindex='';
+    let hexindex = '';
+    let rgbIndex = 0;
+    for (let index = 1; index < hexColors.length; index++) {
+        hexindex += hexColors[index];
+        if (index % 2 == 0) {
+            resultRgb[rgbIndex] = parseInt('0x'.concat(hexindex)) / 255.0;
+            hexindex = '';
             rgbIndex++;
         }
     }
@@ -354,8 +364,8 @@ function draw() {
     initMap();
     initControls();
     animate();
-    document.addEventListener(`mousemove`,onMouseMove,false);
-    document.addEventListener(`pointermove`,rayCastEvent);
-    document.addEventListener(`click`,mapClick);
+    document.addEventListener(`mousemove`, onMouseMove, false);
+    document.addEventListener(`pointermove`, rayCastEvent);
+    document.addEventListener(`click`, mapClick);
     window.onresize = onWindowResize;
 }

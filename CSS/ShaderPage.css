@@ -49,7 +49,30 @@ footer .matValueTools .property
 }
 footer .matValueTools .property [type="range"]
 {
+   /* -webkit-appearance: none; */
    width: 50%;
+   /* height: 3px; */
+ 
 }
+/* #5A5C5D */
+/* #3ABE86 */
+/* footer .matValueTools .property [type="range"]::-ms-fill-upper
+{
+   background-color: #5A5C5D;
+}
+footer .matValueTools .property [type="range"]::-ms-fill-lower
+{
+    background-color: #3ABE86;
+} */
+
+/* footer .matValueTools .property [type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    background: #ffffff; 
+    border-radius: 50%; 
+ 
+} */
+
 
 

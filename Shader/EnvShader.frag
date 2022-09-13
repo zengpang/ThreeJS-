@@ -1,5 +1,6 @@
 varying vec4 vPosition;
 varying vec3 vNormal;
+varying vec3 vTangent;
 varying vec2 vUv;
 void main()
 {

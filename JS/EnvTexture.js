@@ -1,16 +1,17 @@
 
 var renderer;
-const $=s=>document.querySelector(s);
-var mainMatColor=$('#mainColor');
-var fresnelMatColor=$('#envValue');
-var fresnelMatPow=$('#rContrastValue');
-var fresnelMatPower=$('#rInitValue');
-var monkeyHead;
-let initMatValue={
-    mainMatColor:hexToHSL(mainMatColor.value),
-    fresnelColor:hexToHSL(mainMatColor.value),
-    fresnelPower:fresnelMatPower.value,
-    fresnelPow  :fresnelMatPow.value
+const $ = s => document.querySelector(s);
+var mainMatColor = $('#mainColor');
+var fresnelMatColor = $('#envValue');
+var fresnelMatPow = $('#rContrastValue');
+var fresnelMatPower = $('#rInitValue');
+var showModel;
+//材质数学初始化
+let initMatValue = {
+    mainMatColor: hexToHSL(mainMatColor.value),
+    fresnelColor: hexToHSL(mainMatColor.value),
+    fresnelPower: fresnelMatPower.value,
+    fresnelPow: fresnelMatPow.value
 };
 //本地工程文件读取
 function load(name) {
@@ -25,66 +26,83 @@ function load(name) {
 //Shader文件读取
 var fragShaderStr;
 var vertexShaderStr;
-function shaderinit()
-{
-     fragShaderStr=load(`/Shader/EnvShader.frag`);
-     vertexShaderStr=load(`/Shader/EnvShader.vert`)
+function shaderinit() {
+    fragShaderStr = load(`./Shader/EnvShader.frag`);
+    vertexShaderStr = load(`./Shader/EnvShader.vert`)
 }
 //猴头材质
 var selfMat;
-function matinit()
-{
-    this.fragShaderStr=fragShaderStr;
-    this.vertexShaderStr=vertexShaderStr;
-    selfMat= new THREE.ShaderMaterial({
-        uniforms:{
-         fresnelPow:{value:initMatValue.fresnelPow},
-         fresnelPower:{value:initMatValue.fresnelPower},
-         fresnelColor:{value:new THREE.Vector3(initMatValue.fresnelColor[0],initMatValue.fresnelColor[1],initMatValue.fresnelColor[2])},
-         mainColor:{value:new THREE.Vector3(initMatValue.mainMatColor[0],initMatValue.mainMatColor[1],initMatValue.mainMatColor[2])},
-         lightPosition:{value:new THREE.Vector3(0,50,50)}, 
+function matinit() {
+    this.fragShaderStr = fragShaderStr;
+    this.vertexShaderStr = vertexShaderStr;
+    selfMat = new THREE.ShaderMaterial({
+        uniforms: {
+            fresnelPow: { value: initMatValue.fresnelPow },
+            fresnelPower: { value: initMatValue.fresnelPower },
+            fresnelColor: { value: new THREE.Vector3(initMatValue.fresnelColor[0], initMatValue.fresnelColor[1], initMatValue.fresnelColor[2]) },
+            mainColor: { value: new THREE.Vector3(initMatValue.mainMatColor[0], initMatValue.mainMatColor[1], initMatValue.mainMatColor[2]) },
+            lightPosition: { value: new THREE.Vector3(0, 50, 50) },
         },
         //236,65,65
-        vertexShader:this.fragShaderStr,
-        fragmentShader:this.vertexShaderStr
-     });
-     console.log(`材质初始化`);
+        vertexShader: this.fragShaderStr,
+        fragmentShader: this.vertexShaderStr
+    });
+    console.log(`材质初始化`);
 }
-mainMatColor.addEventListener("input",matColorChange,false);
-fresnelMatColor.addEventListener("input",matColorChange,false);
+mainMatColor.addEventListener("input", matColorChange, false);
+fresnelMatColor.addEventListener("input", matColorChange, false);
 function initRender() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    //修改渲染器输出格式
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    //渲染器添加toneMapping效果
+    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    
     //告诉渲染器需要阴影效果 
-	renderer.setClearColor('#1F2025',1.0);
+    renderer.setClearColor('#1F2025', 1.0);
     document.getElementsByClassName('mainShow')[0].appendChild(renderer.domElement);
 }
 var EnvLight;
-function initEnv()
-{
-    
+function initEnv() {
+
 }
 var camera;
 function initCamera() {
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 200, 4);
+    camera.position.set(31.10476063070969, 5.39751544957362, -197.53318883944013);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 }
+
 
 var scene;
 function initScene() {
     scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xa0a0a0);
+    //环境贴图读取
+    new THREE.RGBELoader()
+        .setPath(`../texture/EnvTexture/CubeMap/`)
+        .load(`1_HDR.HDR`, function (texture) {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            console.log(texture);
+            scene.background = texture;
+            scene.environment = texture;
+        })
+
 }
 
 var light;
+let directLight;
 function initLight() {
-   
+
     scene.add(new THREE.AmbientLight(0x444444));
     light = new THREE.PointLight(0xffffff);
     light.position.set(0, 50, 50);
-    //告诉平行光需要开启阴影投射
+    //告诉点光需要开启阴影投射
     light.castShadow = true;
     scene.add(light);
+
+
 }
 //模型初始化
 function initModelFbx() {
@@ -93,27 +111,17 @@ function initModelFbx() {
     loader.load("../Model/SM_Shield.fbx", function (object) {
         //创建纹理
         var mat = selfMat;
-        let geometry=object.children[0].geometry;
-        monkeyHead = new THREE.Mesh(geometry, mat);;
-   
-         monkeyHead.rotation.x = -1 * Math.PI; //将模型摆正
-         monkeyHead.scale.set(0.2, 0.2, 0.2); //缩放
+        let geometry = object.children[0].geometry;
+        showModel = new THREE.Mesh(geometry, mat);;
+
+        showModel.rotation.x = -0.5 * Math.PI; //将模型摆正
+        showModel.rotation.z = -1 * Math.PI; //将模型摆正
+        showModel.scale.set(0.2, 0.2, 0.2); //缩放
         // geometry.center(); //居中显示
-        scene.add(monkeyHead);
+        scene.add(showModel);
     });
 }
-function initModel() {
-    var loader = new THREE.STLLoader();
-    loader.load("../Model/MonkeyHead.stl", function (geometry) {
-        //创建纹理
-        var mat = selfMat;
-        monkeyHead = new THREE.Mesh(geometry, mat);
-        monkeyHead.rotation.x = -0.5 * Math.PI; //将模型摆正
-        monkeyHead.scale.set(1, 1, 1); //缩放
-        geometry.center(); //居中显示
-        scene.add(monkeyHead);
-    });
-}
+
 //用户交互插件 鼠标左键按住旋转，右键按住平移，滚轮缩放
 var controls;
 function initControls() {
@@ -134,9 +142,18 @@ function initControls() {
     //是否开启右键拖拽
     controls.enablePan = true;
 }
-//#1A2A3B
+// x
+// : 
+// 31.10476063070969
+// y
+// : 
+// 5.39751544957362
+// z
+// : 
+// -197.53318883944013
 function render() {
     renderer.render(scene, camera);
+
 }
 
 //窗口变动触发的函数
@@ -155,55 +172,47 @@ function animate() {
 
 
 //材质颜色变化
-function matColorChange(event) 
-{
-    let changeColor= hexToHSL(event.target.value);
+function matColorChange(event) {
+    let changeColor = hexToHSL(event.target.value);
     //event.target返回绑定事件的整个节点信息
-    switch(event.target)
-    {
-      case mainMatColor:{
-        monkeyHead.material.uniforms.mainColor.value =new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
-      };break;
-      case fresnelMatColor:{
-        monkeyHead.material.uniforms.fresnelColor.value =new THREE.Vector3(changeColor[0],changeColor[1],changeColor[2]);
-      };break;
+    switch (event.target) {
+        case mainMatColor: {
+            showModel.material.uniforms.mainColor.value = new THREE.Vector3(changeColor[0], changeColor[1], changeColor[2]);
+        }; break;
+        case fresnelMatColor: {
+            showModel.material.uniforms.fresnelColor.value = new THREE.Vector3(changeColor[0], changeColor[1], changeColor[2]);
+        }; break;
     }
-   
+
 }
 //材质变量
-function matValueChange(event)
-{
-    switch(event.target)
-    {
-      case fresnelMatPow:{
-        monkeyHead.material.uniforms.fresnelPow.value =fresnelMatPow.value;
-      };break;
-      case fresnelMatPower:{
-        monkeyHead.material.uniforms.fresnelPower.value =fresnelMatPower.value;
-      };break;
+function matValueChange(event) {
+    switch (event.target) {
+        case fresnelMatPow: {
+            showModel.material.uniforms.fresnelPow.value = fresnelMatPow.value;
+        }; break;
+        case fresnelMatPower: {
+            showModel.material.uniforms.fresnelPower.value = fresnelMatPower.value;
+        }; break;
     }
 }
 //颜色格式转换
-function hexToHSL(hexColor)
-{
-    let resultRgb=new Array(3).fill('');
-    if(!(/#/).test(hexColor))
-    {
-      console.log(`不符合格式，已停止转换`);
-      return;
+function hexToHSL(hexColor) {
+    let resultRgb = new Array(3).fill('');
+    if (!(/#/).test(hexColor)) {
+        console.log(`不符合格式，已停止转换`);
+        return;
     }
     let hexColors = hexColor.split(/#|/);
-    let hexindex='';
-    let rgbIndex=0;
-    for(let index=1;index<hexColors.length;index++)
-    {
-        hexindex+=hexColors[index];
-        if(index%2==0)
-        {
-            resultRgb[rgbIndex]=parseInt('0x'.concat(hexindex))/255.0;
-            hexindex='';
+    let hexindex = '';
+    let rgbIndex = 0;
+    for (let index = 1; index < hexColors.length; index++) {
+        hexindex += hexColors[index];
+        if (index % 2 == 0) {
+            resultRgb[rgbIndex] = parseInt('0x'.concat(hexindex)) / 255.0;
+            hexindex = '';
             rgbIndex++;
-            
+
         }
     }
     return resultRgb;

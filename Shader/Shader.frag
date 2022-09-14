@@ -1,15 +1,9 @@
-#extension GL_OES_standard_derivatives:enable
-precision highp float;
-precision highp int;
+
+#extension GL_OES_standard_derivatives : enable;
 
 uniform mat4 modelMatrix;
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
-uniform mat3 normalMatrix;
 
-uniform vec3 cameraPosition;
-uniform float time;
+
 uniform vec3 color;
 uniform vec3 lightPosition;
 
@@ -26,20 +20,19 @@ uniform float _cubeMapinit;
 uniform vec4 _cubeMapTex_HDR;
 
 uniform sampler2D _roughnessMap;
-uniform float _roughness;
-uniform float _roughnessContrast;
-uniform float _roughnessInit;
-uniform float _roughnessMin;
-uniform float _roughnessMax;
+uniform  float _roughness;
+uniform  float _roughnessContrast;
+uniform  float _roughnessInit;
+uniform  float _roughnessMin;
+uniform  float _roughnessMax;
 
-varying vec3 vPosition;
+
+varying vec4 vPosition;
 varying vec3 vNormal;
 varying vec2 vUv;
-varying vec2 vUv2;
-varying vec3 vTangent;
 vec3 saturate(vec3 In)
 {
-    return clamp(In,0.,1.);
+    return clamp(In,0.0,1.0);
 }
 vec3 ACETompping(vec3 x)
 {
@@ -55,7 +48,11 @@ vec4 lerp(vec4 a,vec4 b,vec4 w)
     return a+w*(b-a);
     
 }
-
+float lerpFloat(float a,float b,float w)
+{
+    return a+w*(b-a);
+    
+}
 mat3 cotangent_frame(vec3 N,vec3 p,vec2 uv)
 {
     // get edge vectors of the pixel triangle
@@ -74,7 +71,6 @@ mat3 cotangent_frame(vec3 N,vec3 p,vec2 uv)
     float invmax=inversesqrt(max(dot(T,T),dot(B,B)));
     return mat3(T*invmax,B*invmax,N);
 }
-
 vec3 ComputeNormal(vec3 nornal,vec3 viewDir,vec2 uv,sampler2D normalMap)
 {
     // assume N, the interpolated vertex normal and
@@ -87,11 +83,10 @@ vec3 ComputeNormal(vec3 nornal,vec3 viewDir,vec2 uv,sampler2D normalMap)
     return normalize(TBN*map);
     return(texture2D(normalMap,vUv).rgb-.5)*2.;
 }
-void main(){
-    vec3 worldPosition=(modelMatrix*vec4(vPosition,1.)).xyz;
+void main()
+{
     
-    //向量声明
-    
+    vec3 worldPosition=(modelMatrix*vec4(vPosition)).xyz;
     vec3 vDir=normalize(cameraPosition-worldPosition);
     vec3 nDir=ComputeNormal(vNormal,vDir,vUv*tilling,_normalTex);
     
@@ -106,12 +101,26 @@ void main(){
     vec4 adjusts=vec4(_aoAdjust,_aoAdjust,_aoAdjust,_aoAdjust);
     aoTex=lerp(a1,aoTex,adjusts);
     
-    vec4 mainTex=texture2D(_mainTex,vUv);
-    vec4 roughnessTex=texture2D(_roughnessMap,vUv);
+    vec3 mainTex=texture2D(_mainTex,vUv).xyz;
+    vec3 roughnessTex=texture2D(_roughnessMap,vUv).xyz;
+    vec3 _roughnessContrasts=vec3(_roughnessContrast,_roughnessContrast,_roughnessContrast);
     
-    vec3 worldNormal=normalize(vec3(modelMatrix*vec4(vNormal,0.)));
-    vec3 lightVector=normalize(lightPosition-worldPosition);
-    float brightness=dot(worldNormal,lightVector);
-    gl_FragColor=vec4(color*brightness,1.);
+    //粗糙度
+    float finalRoughness=saturate(pow(roughnessTex,_roughnessContrasts)*_roughnessInit).x;
+    finalRoughness=lerpFloat(_roughnessMin,_roughnessMax,finalRoughness);
+    finalRoughness=finalRoughness*(1.7-.7*finalRoughness);
+    finalRoughness=finalRoughness*6.;
     
+    // //环境光
+    vec4 cubeMapTex=textureCube(_cubeMapTex,rvDir,finalRoughness);
+    vec3 env_color=cubeMapTex.xyz;
+    env_color=env_color*_cubeMapinit;
+    
+    // //最终颜色
+    vec3 finalColor=(env_color*aoTex.xyz*_mainColor);
+    vec3 finalColor_liner=pow(finalColor,vec3(2.2,2.2,2.2));
+    finalColor=ACETompping(finalColor_liner);
+    vec3 finalColor_gamma=pow(finalColor,vec3(1./2.2,1./2.2,1./2.2));
+    
+    gl_FragColor=vec4(finalColor,1);
 }

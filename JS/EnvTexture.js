@@ -6,12 +6,14 @@ var fresnelMatColor = $('#envValue');
 var fresnelMatPow = $('#rContrastValue');
 var fresnelMatPower = $('#rInitValue');
 var showModel;
+var cubemapTexTexture;
 //材质数学初始化
 let initMatValue = {
     mainMatColor: hexToHSL(mainMatColor.value),
-    fresnelColor: hexToHSL(mainMatColor.value),
-    fresnelPower: fresnelMatPower.value,
-    fresnelPow: fresnelMatPow.value
+    cubemapTex: new THREE.RGBELoader()
+        .setPath(`../texture/EnvTexture/CubeMap/`)
+        .load(`1_HDR.HDR`),
+    NormalTex: new THREE.TextureLoader().load("../texture/EnvTexture/T_Shield_N.png")
 };
 //本地工程文件读取
 function load(name) {
@@ -32,22 +34,44 @@ function shaderinit() {
 }
 //猴头材质
 var selfMat;
+
 function matinit() {
+
     this.fragShaderStr = fragShaderStr;
     this.vertexShaderStr = vertexShaderStr;
+    const path = '../texture/EnvTexture/CubeMap/pisa/';
+    const format = '.png';
+    const urls = [
+        path + 'px' + format, path + 'nx' + format,
+        path + 'py' + format, path + 'ny' + format,
+        path + 'pz' + format, path + 'nz' + format
+    ];
+
     selfMat = new THREE.ShaderMaterial({
         uniforms: {
-            fresnelPow: { value: initMatValue.fresnelPow },
-            fresnelPower: { value: initMatValue.fresnelPower },
-            fresnelColor: { value: new THREE.Vector3(initMatValue.fresnelColor[0], initMatValue.fresnelColor[1], initMatValue.fresnelColor[2]) },
-            mainColor: { value: new THREE.Vector3(initMatValue.mainMatColor[0], initMatValue.mainMatColor[1], initMatValue.mainMatColor[2]) },
-            lightPosition: { value: new THREE.Vector3(0, 50, 50) },
+            _mainColor: { value: new THREE.Vector3(initMatValue.mainMatColor[0], initMatValue.mainMatColor[1], initMatValue.mainMatColor[2]) },
+            lightPosition: { value: new THREE.Vector3(0, 1.25, 1.25) },
+            tilling: { value: new THREE.Vector2(1, 1) },
+            _cubeMapTex: { value: new THREE.CubeTextureLoader().load( urls ) },
+            _normalTex: { value: initMatValue.NormalTex },
+            _cubeMapinit: { value: 2 },
+            _aoAdjust: { value: 0.694 },
+            _aoTex:{value:new THREE.TextureLoader().load("../texture/EnvTexture/T_Shield_AO.png")},
+            _roughnessMap:{value:new THREE.TextureLoader().load("../texture/EnvTexture/T_FloorMarble_R.png")},
+            _roughness: { value: 1.0 },
+            _roughnessContrast: { value: 1.06 },
+            _roughnessInit: { value: 1.92 },
+            _roughnessMin: { value: 0.0 },
+            _roughnessMax: { value: 0.7 }
         },
         //236,65,65
-        vertexShader: this.fragShaderStr,
-        fragmentShader: this.vertexShaderStr
+        vertexShader: this.vertexShaderStr,
+        fragmentShader: this.fragShaderStr
     });
-    console.log(`材质初始化`);
+    console.log(selfMat.uniforms._cubeMapTex);
+    // selfMat.extensions.derivatives = true;
+
+
 }
 mainMatColor.addEventListener("input", matColorChange, false);
 fresnelMatColor.addEventListener("input", matColorChange, false);
@@ -57,8 +81,8 @@ function initRender() {
     //修改渲染器输出格式
     renderer.outputEncoding = THREE.sRGBEncoding;
     //渲染器添加toneMapping效果
-    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    
+    // renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
     //告诉渲染器需要阴影效果 
     renderer.setClearColor('#1F2025', 1.0);
     document.getElementsByClassName('mainShow')[0].appendChild(renderer.domElement);
@@ -85,6 +109,8 @@ function initScene() {
         .load(`1_HDR.HDR`, function (texture) {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             console.log(texture);
+
+
             scene.background = texture;
             scene.environment = texture;
         })
@@ -97,7 +123,7 @@ function initLight() {
 
     scene.add(new THREE.AmbientLight(0x444444));
     light = new THREE.PointLight(0xffffff);
-    light.position.set(0, 50, 50);
+    light.position.set(0, 1.25, 1.25);
     //告诉点光需要开启阴影投射
     light.castShadow = true;
     scene.add(light);
@@ -177,11 +203,9 @@ function matColorChange(event) {
     //event.target返回绑定事件的整个节点信息
     switch (event.target) {
         case mainMatColor: {
-            showModel.material.uniforms.mainColor.value = new THREE.Vector3(changeColor[0], changeColor[1], changeColor[2]);
+            selfMat.uniforms._mainColor.value = new THREE.Vector3(changeColor[0], changeColor[1], changeColor[2]);
         }; break;
-        case fresnelMatColor: {
-            showModel.material.uniforms.fresnelColor.value = new THREE.Vector3(changeColor[0], changeColor[1], changeColor[2]);
-        }; break;
+       
     }
 
 }
@@ -218,10 +242,11 @@ function hexToHSL(hexColor) {
     return resultRgb;
 }
 function draw() {
+    initScene();
     shaderinit();
     matinit();
     initRender();
-    initScene();
+
     initCamera();
     initLight();
     initModelFbx();
